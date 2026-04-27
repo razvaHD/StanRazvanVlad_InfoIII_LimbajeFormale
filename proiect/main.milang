@@ -1,0 +1,19 @@
+PRINT("HI!")
+
+DEF add(a) -> VAR a=a + 1
+
+DEF addb(a, b)
+    VAR a=a+b
+END
+
+FOR i = 0 TO 5 THEN
+    PRINT("LOOP")
+END
+
+VAR a = 1
+VAR b = 2
+
+add(a)
+PRINT(a)
+addb(a,b)
+PRINT(a)

@@ -5,7 +5,7 @@
 import os
 from unicodedata import name
 
-from parser import *
+from my_parser import *
 from rtresult import *
 from results import *
 from context import *
@@ -199,6 +199,54 @@ class BuiltInFunction(BaseFunction):
         return RTResult().success(Number.null)
     execute_extend.arg_names = ["listA", "listB"]
 
+    def execute_run(self, exec_ctx):
+        fn = exec_ctx.symbol_table.get("fn")
+
+        if not isinstance(fn, String):
+            return RTResult().failure(RTError(
+                self.pos_start, self.pos_end,
+                "Argument must be string",
+                exec_ctx
+            ))
+
+        fn = fn.value
+
+        try:
+            with open(fn, "r") as f:
+                script = f.read()
+        except Exception as e:
+            return RTResult().failure(RTError(
+                self.pos_start, self.pos_end,
+                f"Failed to load script \"{fn}\"\n" + str(e),
+                exec_ctx
+            ))
+
+        _, error = run(script, fn)
+
+        if error:
+            return RTResult().failure(RTError(
+                self.pos_start, self.pos_end,
+                f"Failed to finish executing script \"{fn}\"\n" + error.as_string(),
+                exec_ctx
+            ))
+
+        return RTResult().success(Number.null)
+    execute_run.arg_names = ["fn"]
+    def execute_len(self, exec_ctx):
+        list = exec_ctx.symbol_table.get("list")
+
+        if isinstance(list, String):
+            return RTResult().success(Number(len(list.value)))
+        elif isinstance(list, List):
+            return RTResult().success(Number(len(list.elements)))
+        else:
+            return RTResult().failure(RTError(
+                self.pos_start, self.pos_end,
+                "Argument must be string or list",
+                exec_ctx
+            ))
+    execute_len.arg_names = ["list"]
+
 BuiltInFunction.print       = BuiltInFunction("print")
 BuiltInFunction.print_ret   = BuiltInFunction("print_ret")
 BuiltInFunction.input       = BuiltInFunction("input")
@@ -211,12 +259,15 @@ BuiltInFunction.is_function = BuiltInFunction("is_function")
 BuiltInFunction.append      = BuiltInFunction("append")
 BuiltInFunction.pop         = BuiltInFunction("pop")
 BuiltInFunction.extend      = BuiltInFunction("extend")
+BuiltInFunction.run         = BuiltInFunction("run")
+BuiltInFunction.len         = BuiltInFunction("len")
 
 class Function:
-    def __init__(self, name, body_node, arg_names):
+    def __init__(self, name, body_node, arg_names, should_return_null=False):
         self.name=name or '<anonymous>'
         self.body_node=body_node
         self.arg_names=arg_names
+        self.should_return_null=should_return_null
         self.set_pos()
         self.set_context()
     
@@ -230,7 +281,7 @@ class Function:
         return self
     
     def copy(self):
-        copy=Function(self.name, self.body_node, self.arg_names)
+        copy=Function(self.name, self.body_node, self.arg_names, self.should_return_null)
         copy.set_pos(self.pos_start, self.pos_end)
         copy.set_context(self.context)
         return copy
@@ -263,9 +314,11 @@ class Function:
 
         value=res.register(interpreter.visit(self.body_node, new_context))
         if res.error: return res
-        return res.success(value)
+        return res.success(Number.null if self.should_return_null else value)
     def __repr__(self):
         return f"<function {self.name}>"
+
+
 
 class Interpreter():
     def visit(self, node, context):
@@ -371,23 +424,24 @@ class Interpreter():
         return RTResult().success(number.set_pos(node.op_tok.pos_start, node.op_tok.pos_end))
     
     def visit_IfNode(self, node, context):
-        res=RTResult()
+        res = RTResult()
 
-        for condition, expr in node.cases:
-            condition_value=res.register(self.visit(condition, context))
+        for condition, expr, should_return_null in node.cases:  # ← unpack 3 values
+            condition_value = res.register(self.visit(condition, context))
             if res.error: return res
 
             if condition_value.is_true():
-                expr_value=res.register(self.visit(expr, context))
+                expr_value = res.register(self.visit(expr, context))
                 if res.error: return res
-                return res.success(expr_value)
-        
+                return res.success(Number.null if should_return_null else expr_value)
+
         if node.else_case:
-            else_value=res.register(self.visit(node.else_case, context))
+            expr, should_return_null = node.else_case  # ← unpack tuple
+            else_value = res.register(self.visit(expr, context))
             if res.error: return res
-            return res.success(else_value)
-        
-        return res.success(None)
+            return res.success(Number.null if should_return_null else else_value)
+
+        return res.success(Number.null)
     
     def visit_ForNode(self, node, context):
         res=RTResult()
@@ -419,7 +473,9 @@ class Interpreter():
             element.append(res.register(self.visit(node.body_node, context)))
             if res.error: return res
         
-        return res.success(List(element).set_context(context).set_pos(node.pos_start, node.pos_end))
+        return res.success(
+            Number.null if node.should_return_null else
+            List(element).set_context(context).set_pos(node.pos_start, node.pos_end))
 
     def visit_WhileNode(self, node, context):
         res=RTResult()
@@ -435,7 +491,9 @@ class Interpreter():
             element.append(res.register(self.visit(node.body_node, context)))
             if res.error: return res
         
-        return res.success(List(element).set_context(context).set_pos(node.pos_start, node.pos_end))
+        return res.success(
+            Number.null if node.should_return_null else
+            List(element).set_context(context).set_pos(node.pos_start, node.pos_end))
 
     def visit_FuncDefNode(self, node, context):
         res=RTResult()
@@ -443,7 +501,7 @@ class Interpreter():
         func_name=node.var_name_tok.value if node.var_name_tok else None
         body_node=node.body_node
         arg_names=[arg_name.value for arg_name in node.arg_name_toks]
-        func_value=Function(func_name, body_node, arg_names).set_context(context).set_pos(node.pos_start, node.pos_end)
+        func_value=Function(func_name, body_node, arg_names, node.should_return_null).set_context(context).set_pos(node.pos_start, node.pos_end)
 
         if node.var_name_tok:
             context.symbol_table.set(func_name, func_value)
@@ -465,3 +523,45 @@ class Interpreter():
         return_value=res.register(value_to_call.execute(args))
         if res.error: return res
         return res.success(return_value)
+    
+global_symbol_table=SymbolTable()
+global_symbol_table.set("NULL", Number.null)
+global_symbol_table.set("TRUE", Number.true)
+global_symbol_table.set("FALSE", Number.false)
+global_symbol_table = SymbolTable()
+global_symbol_table.set("MATH_PI", Number.math_PI)
+global_symbol_table.set("PRINT", BuiltInFunction.print)
+global_symbol_table.set("PRINT_RET", BuiltInFunction.print_ret)
+global_symbol_table.set("INPUT", BuiltInFunction.input)
+global_symbol_table.set("INPUT_INT", BuiltInFunction.input_int)
+global_symbol_table.set("CLEAR", BuiltInFunction.clear)
+global_symbol_table.set("CLS", BuiltInFunction.clear)
+global_symbol_table.set("IS_NUM", BuiltInFunction.is_number)
+global_symbol_table.set("IS_STR", BuiltInFunction.is_string)
+global_symbol_table.set("IS_LIST", BuiltInFunction.is_list)
+global_symbol_table.set("IS_FUN", BuiltInFunction.is_function)
+global_symbol_table.set("APPEND", BuiltInFunction.append)
+global_symbol_table.set("POP", BuiltInFunction.pop)
+global_symbol_table.set("EXTEND", BuiltInFunction.extend)
+global_symbol_table.set("LEN", BuiltInFunction.len)
+global_symbol_table.set("RUN", BuiltInFunction.run)
+
+def run(text, fn='<stdin>'):
+    lexer=Lexer(fn, text)
+    tokens, error=lexer.make_tokens()
+    if error:
+        return None, error
+
+    parser =Parser(tokens)
+    ast=parser.parse()
+
+    if ast.error:
+        return None, ast.error
+    
+    interpreter=Interpreter()
+    context = Context('<program>')
+    context.symbol_table=global_symbol_table
+    result = interpreter.visit(ast.node, context)
+
+
+    return result.value, result.error

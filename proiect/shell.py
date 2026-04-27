@@ -1,6 +1,7 @@
 import basic
 
 
+
 while True:
     text= input('basic>')
     if text.strip()=='': continue
