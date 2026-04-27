@@ -20,16 +20,22 @@ class Parser:
         self.update_current_tok()
 
     def update_current_tok(self):
+<<<<<<< HEAD
 <<<<<<< HEAD:proiect/my_parser.py
         if self.tok_idx >= 0 and self.tok_idx < len(self.tokens):
             self.current_tok = self.tokens[self.tok_idx]
 
 =======
+=======
+>>>>>>> parent of 64a8eac (new)
         if self.tok_idx>=0 and self.tok_idx<len(self.tokens):
             self.current_tok=self.tokens[self.tok_idx]
     
     
+<<<<<<< HEAD
 >>>>>>> parent of 64a8eac (new):proiect/parser.py
+=======
+>>>>>>> parent of 64a8eac (new)
     def parse(self):
         res = self.statements()
         if not res.error and self.current_tok.type != TT_EOF:
@@ -38,11 +44,15 @@ class Parser:
                 "Expected '+', '-', '*', '/', 'VAR', 'IF', 'FOR', 'WHILE', 'DEF', int, float, identifier, or '('"
             ))
         return res
+<<<<<<< HEAD
 <<<<<<< HEAD:proiect/my_parser.py
 
 =======
     
 >>>>>>> parent of 64a8eac (new):proiect/parser.py
+=======
+    
+>>>>>>> parent of 64a8eac (new)
     def statements(self):
         res=ParseResult()
         statements=[]
@@ -52,6 +62,7 @@ class Parser:
             res.register_advancement()
             self.advance()
 
+<<<<<<< HEAD
 <<<<<<< HEAD:proiect/my_parser.py
         statement = res.register(self.statement())
         if res.error: return res
@@ -180,6 +191,8 @@ class Parser:
         res = ParseResult()
         atom = res.register(self.atom())
 =======
+=======
+>>>>>>> parent of 64a8eac (new)
         statement=res.register(self.expr())
         if res.error: return res
         statements.append(statement)
@@ -204,7 +217,10 @@ class Parser:
     def call(self):
         res=ParseResult()
         atom=res.register(self.atom())
+<<<<<<< HEAD
 >>>>>>> parent of 64a8eac (new):proiect/parser.py
+=======
+>>>>>>> parent of 64a8eac (new)
         if res.error: return res
 
         if self.current_tok.type==TT_LPAREN:
@@ -222,6 +238,7 @@ class Parser:
                         self.current_tok.pos_start, self.current_tok.pos_end,
                         "Expected ')', 'VAR', 'IF', 'FOR', 'WHILE', 'DEF', int, float, identifier, '+', '-', or '('"
                     ))
+<<<<<<< HEAD
 <<<<<<< HEAD:proiect/my_parser.py
 
                 while self.current_tok.type == TT_COMMA:
@@ -230,11 +247,16 @@ class Parser:
                     arg_nodes.append(res.register(self.expr()))
                     if res.error: return res
 =======
+=======
+>>>>>>> parent of 64a8eac (new)
                 
                 while self.current_tok.type==TT_COMMA:
                     res.register_advancement()
                     self.advance()
+<<<<<<< HEAD
 >>>>>>> parent of 64a8eac (new):proiect/parser.py
+=======
+>>>>>>> parent of 64a8eac (new)
 
                     arg_nodes.append(res.register(self.expr()))
                     if res.error: return res
@@ -341,10 +363,13 @@ class Parser:
                 res.register_advancement()
                 self.advance()
 
+<<<<<<< HEAD
 <<<<<<< HEAD:proiect/my_parser.py
             return res.success(CallNode(atom, arg_nodes))
         return res.success(atom)
 =======
+=======
+>>>>>>> parent of 64a8eac (new)
                 element_nodes.append(res.register(self.expr()))
                 if res.error: return res
             
@@ -357,6 +382,7 @@ class Parser:
             res.register_advancement()
             self.advance()
         return res.success(ListNode(element_nodes, pos_start, self.current_tok.pos_end.copy()))
+<<<<<<< HEAD
 >>>>>>> parent of 64a8eac (new):proiect/parser.py
 
     def atom(self):
@@ -464,6 +490,8 @@ class Parser:
             self.advance()
 
         return res.success(ListNode(element_nodes, pos_start, self.current_tok.pos_end.copy()))
+=======
+>>>>>>> parent of 64a8eac (new)
 
     def if_expr(self):
         res = ParseResult()
@@ -513,11 +541,15 @@ class Parser:
             else_case = res.register(self.expr())
             if res.error: return res
 
+<<<<<<< HEAD
 <<<<<<< HEAD:proiect/my_parser.py
         return res.success((cases, else_case))  # ← was missing from single-line path
 =======
         return res.success(IfNode(cases, else_case))
 >>>>>>> parent of 64a8eac (new):proiect/parser.py
+=======
+        return res.success(IfNode(cases, else_case))
+>>>>>>> parent of 64a8eac (new)
 
     def for_expr(self):
         res = ParseResult()
@@ -527,11 +559,15 @@ class Parser:
                 self.current_tok.pos_start, self.current_tok.pos_end,
                 "Expected 'FOR'"
             ))
+<<<<<<< HEAD
 <<<<<<< HEAD:proiect/my_parser.py
 
 =======
         
 >>>>>>> parent of 64a8eac (new):proiect/parser.py
+=======
+        
+>>>>>>> parent of 64a8eac (new)
         res.register_advancement()
         self.advance()
 
@@ -587,6 +623,7 @@ class Parser:
         res.register_advancement()
         self.advance()
 
+<<<<<<< HEAD
 <<<<<<< HEAD:proiect/my_parser.py
         if self.current_tok.type == TT_NEWLINE:  # ← multiline support added
             res.register_advancement()
@@ -604,6 +641,8 @@ class Parser:
 
 =======
 >>>>>>> parent of 64a8eac (new):proiect/parser.py
+=======
+>>>>>>> parent of 64a8eac (new)
         body = res.register(self.expr())
         if res.error: return res
 
@@ -617,11 +656,15 @@ class Parser:
                 self.current_tok.pos_start, self.current_tok.pos_end,
                 "Expected 'WHILE'"
             ))
+<<<<<<< HEAD
 <<<<<<< HEAD:proiect/my_parser.py
 
 =======
         
 >>>>>>> parent of 64a8eac (new):proiect/parser.py
+=======
+        
+>>>>>>> parent of 64a8eac (new)
         res.register_advancement()
         self.advance()
 
@@ -685,11 +728,15 @@ class Parser:
                 self.current_tok.pos_start, self.current_tok.pos_end,
                 "Expected 'DEF'"
             ))
+<<<<<<< HEAD
 <<<<<<< HEAD:proiect/my_parser.py
 
 =======
         
 >>>>>>> parent of 64a8eac (new):proiect/parser.py
+=======
+        
+>>>>>>> parent of 64a8eac (new)
         res.register_advancement()
         self.advance()
 
@@ -701,6 +748,7 @@ class Parser:
             if self.current_tok.type != TT_LPAREN:
                 return res.failure(InvalidSyntaxError(
                     self.current_tok.pos_start, self.current_tok.pos_end,
+<<<<<<< HEAD
 <<<<<<< HEAD:proiect/my_parser.py
                     "Expected '('"
                 ))
@@ -713,6 +761,9 @@ class Parser:
 =======
                     f"Expected '('"
 >>>>>>> parent of 64a8eac (new):proiect/parser.py
+=======
+                    f"Expected '('"
+>>>>>>> parent of 64a8eac (new)
                 ))
 
         else:
@@ -764,6 +815,7 @@ class Parser:
         if self.current_tok.type != TT_ARROW:
             return res.failure(InvalidSyntaxError(
                 self.current_tok.pos_start, self.current_tok.pos_end,
+<<<<<<< HEAD
 <<<<<<< HEAD:proiect/my_parser.py
                 "Expected '->' or NEWLINE"
 =======
@@ -811,6 +863,16 @@ class Parser:
 
         return res.success(left)
 =======
+=======
+                "Expected '->'"
+            ))
+        res.register_advancement()
+        self.advance()
+        node_to_return = res.register(self.expr())
+        if res.error: return res
+        return res.success(FuncDefNode(var_name_tok, arg_name_toks, node_to_return))
+
+>>>>>>> parent of 64a8eac (new)
     def bin_op(self, func_a, ops, func_b=None):
         if func_b==None:
             func_b=func_a
@@ -864,5 +926,9 @@ class Parser:
                 self.current_tok.pos_start, self.current_tok.pos_end,
                 "Expected 'VAR', int, float, identifier, '+', '-', or '('"
             ))
+<<<<<<< HEAD
         return res.success(node)
 >>>>>>> parent of 64a8eac (new):proiect/parser.py
+=======
+        return res.success(node)
+>>>>>>> parent of 64a8eac (new)

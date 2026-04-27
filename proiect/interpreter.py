@@ -264,8 +264,12 @@ class Function:
         value=res.register(interpreter.visit(self.body_node, new_context))
         if res.error: return res
 <<<<<<< HEAD
+<<<<<<< HEAD
         return_value = (res.func_return_value or value) if not self.should_return_null else Number.null
         return res.success(return_value)
+=======
+        return res.success(value)
+>>>>>>> parent of 64a8eac (new)
 =======
         return res.success(value)
 >>>>>>> parent of 64a8eac (new)
