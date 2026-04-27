@@ -49,7 +49,10 @@ KEYWORDS=[
     "ELIF",
     "ELSE",
     "DEF",
-    "END"
+    "END",
+    "RETURN",
+    "CONTINUE",
+    "BREAK"
 ]
 
 DIGITS='0123456789'
@@ -94,8 +97,6 @@ class Lexer:
         while self.current_char!=None:
             if self.current_char in ' \t':
                 self.advance()
-            elif self.current_char=='#':
-                self.skip_comment()
             elif self.current_char in DIGITS:
                 tokens.append(self.make_number())
             elif self.current_char in LETTERS:
@@ -265,10 +266,3 @@ class Lexer:
             tok_type=TT_ARROW
         
         return Token(tok_type, pos_start=pos_start, pos_end=self.pos)
-
-    def skip_comment(self):
-        self.advance()
-
-        while self.current_char!=None and self.current_char!='\n':
-            self.advance()
-        self.advance()
